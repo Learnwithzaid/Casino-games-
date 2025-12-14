@@ -3,5 +3,19 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
+  transform: {
+    '^.+\\.ts
+: 'ts-jest',
+  },
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/**/*.test.ts',
+    '!src/**/*.spec.ts',
+  ],
+  moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
 };
