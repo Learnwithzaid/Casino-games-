@@ -1,0 +1,256 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  username           String    @unique
+  passwordHash       String
+  role               String    @default("PLAYER") // PLAYER, ADMIN, SUPER_ADMIN
+  status             String    @default("PENDING_VERIFICATION") // ACTIVE, INACTIVE, SUSPENDED, BANNED, PENDING_VERIFICATION
+  isEmailVerified    Boolean   @default(false)
+  isTwoFactorEnabled Boolean   @default(false)
+  loginAttempts      Int       @default(0)
+  lastLoginAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  
+  // Relations
+  wallet             Wallet?
+  sessions           Session[]
+  refreshTokens      RefreshToken[]
+  auditLogs          AuditLog[]
+  
+  @@index([email])
+  @@index([username])
+  @@index([role])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Session {
+  id         String    @id @default(uuid())
+  userId     String
+  token      String    @unique
+  ipAddress  String?
+  userAgent  String?
+  status     String    @default("ACTIVE") // ACTIVE, EXPIRED, REVOKED
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  // Relations
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  userId     String
+  token      String    @unique
+  status     String    @default("ACTIVE") // ACTIVE, EXPIRED, REVOKED
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  // Relations
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model Wallet {
+  id              String     @id @default(uuid())
+  userId          String     @unique
+  balance         Float      @default(0.00)
+  currency        String     @default("USD") // USD, EUR, GBP, CAD, AUD, BTC, ETH
+  isFrozen        Boolean    @default(false)
+  verificationLevel Int      @default(1)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  
+  // Relations
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    Transaction[]
+  
+  @@index([userId])
+  @@index([currency])
+  @@index([isFrozen])
+  @@index([createdAt])
+}
+
+model Transaction {
+  id              String    @id @default(uuid())
+  walletId        String
+  type            String    // DEPOSIT, WITHDRAWAL, BET, WIN, BONUS, REFUND, ADJUSTMENT
+  amount          Float
+  currency        String    @default("USD") // USD, EUR, GBP, CAD, AUD, BTC, ETH
+  status          String    @default("PENDING") // PENDING, COMPLETED, FAILED, CANCELLED, REVERSED
+  referenceId     String?   // References to game rounds, payments, etc.
+  externalId      String?   // External payment processor ID
+  metadata        String?     // Additional transaction data
+  processedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  wallet          Wallet    @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  
+  @@index([walletId])
+  @@index([type])
+  @@index([status])
+  @@index([currency])
+  @@index([createdAt])
+  @@index([referenceId])
+  @@index([externalId])
+}
+
+model Game {
+  id              String    @id @default(uuid())
+  name            String    @unique
+  slug            String    @unique
+  provider        String
+  type            String    // SLOT, TABLE, LIVE, etc.
+  rtp             Float     // Return to Player percentage
+  isActive        Boolean   @default(true)
+  minBet          Float     @default(0.01)
+  maxBet          Float     @default(1000.00)
+  maxWin          Float     @default(50000.00)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  symbols         GameSymbol[]
+  paylines        Payline[]
+  gameSettings    GameSetting?
+  
+  @@index([name])
+  @@index([slug])
+  @@index([provider])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model GameSymbol {
+  id              String    @id @default(uuid())
+  gameId          String
+  symbol          String
+  multiplier      Float     @default(1.00)
+  isScatter       Boolean   @default(false)
+  isWild          Boolean   @default(false)
+  isBonus         Boolean   @default(false)
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  game            Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  
+  @@index([gameId])
+  @@index([symbol])
+  @@index([isScatter])
+  @@index([isWild])
+  @@index([sortOrder])
+}
+
+model Payline {
+  id              String    @id @default(uuid())
+  gameId          String
+  name            String
+  pattern         String    // JSON array of positions
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  game            Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  
+  @@index([gameId])
+  @@index([name])
+  @@index([isActive])
+}
+
+model GameSetting {
+  id              String    @id @default(uuid())
+  gameId          String    @unique
+  rtp             Float
+  volatility      String    @default("MEDIUM") // LOW, MEDIUM, HIGH
+  hitFrequency    Float     @default(25.00)
+  freeSpinsEnabled Boolean  @default(false)
+  bonusRounds     Boolean   @default(false)
+  multiplierMax   Float     @default(10.00)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  game            Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id              String    @id @default(uuid())
+  userId          String?
+  action          String
+  resource        String
+  resourceId      String?
+  oldValues       String?
+  newValues       String?
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime  @default(now())
+  
+  // Relations
+  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+}
+
+model PaymentWebhook {
+  id              String    @id @default(uuid())
+  paymentId       String
+  provider        String
+  event           String
+  status          String    // PENDING, SUCCESS, FAILED, CANCELLED, REFUNDED
+  payload         String
+  processedAt     DateTime?
+  retryCount      Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([paymentId])
+  @@index([provider])
+  @@index([event])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model SystemSetting {
+  id              String    @id @default(uuid())
+  key             String    @unique
+  value           String
+  description     String?
+  category        String    @default("GENERAL")
+  isPublic        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([key])
+  @@index([category])
+  @@index([isPublic])
+  @@index([createdAt])
+}
