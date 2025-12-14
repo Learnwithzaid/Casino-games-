@@ -1,3 +1,19 @@
+node_modules
+.env
+.env.*
+!.env.example
+coverage
+.dist
+build
+dist
+.tmp
+*.log
+.DS_Store
+prisma/dev.db
+prisma/test.db
+apps/server/prisma/dev.db
+apps/server/prisma/test.db
+apps/server/.tmp
 # Dependencies
 node_modules/
 node_modules/

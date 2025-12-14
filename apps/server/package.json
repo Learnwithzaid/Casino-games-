@@ -1,0 +1,35 @@
+{
+  "name": "@payments/server",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:dbpush": "prisma db push",
+    "postinstall": "prisma generate",
+    "test": "node scripts/test-run.mjs"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.0",
+    "@fastify/rate-limit": "^10.0.0",
+    "@prisma/client": "^6.0.0",
+    "fastify": "^5.0.0",
+    "pino": "^9.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "prisma": "^6.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.1.0"
+  }
+}
