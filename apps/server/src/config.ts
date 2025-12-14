@@ -4,8 +4,33 @@ const NonEmptyString = z.string().min(1);
 
 const EnvSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   DATABASE_URL: NonEmptyString.default('file:./prisma/dev.db'),
   CORS_ORIGIN: z.string().default('*'),
+
+  // JWT Configuration
+  JWT_SECRET: NonEmptyString.default('your-jwt-secret-change-in-production'),
+  JWT_ACCESS_EXPIRY: z.string().default('15m'),
+  JWT_REFRESH_EXPIRY: z.string().default('7d'),
+  JWT_ISSUER: z.string().default('payments-platform'),
+  
+  // Security Configuration
+  RATE_LIMIT_STORAGE_URL: z.string().optional(), // Redis URL for distributed rate limiting
+  RATE_LIMIT_STRATEGY: z.enum(['memory', 'redis']).default('memory'),
+  MAX_FAILED_LOGIN_ATTEMPTS: z.coerce.number().int().min(1).max(10).default(5),
+  LOCKOUT_DURATION_MINUTES: z.coerce.number().int().min(1).max(60).default(15),
+  
+  // CSP Configuration
+  CSP_ENABLED: z.coerce.boolean().default(true),
+  CSP_REPORT_URI: z.string().optional(),
+  
+  // HSTS Configuration
+  HSTS_ENABLED: z.coerce.boolean().default(true),
+  HSTS_MAX_AGE: z.coerce.number().int().default(31536000), // 1 year
+  
+  // Logging Configuration
+  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error']).default('info'),
+  LOG_REDACT_PATHS: z.string().default('req.headers.authorization,req.headers.cookie,payload.password,payload.token'),
 
   PAYMENTS_HMAC_SECRET_JAZZCASH: NonEmptyString.default('change-me'),
   // Prefer the all-uppercase variants; the mixed-case variants are supported for backwards compatibility.
@@ -30,8 +55,29 @@ const EnvSchema = z.object({
 
 export type AppConfig = {
   port: number;
+  nodeEnv: 'development' | 'production' | 'test';
   databaseUrl: string;
   corsOrigin: string;
+  jwt: {
+    secret: string;
+    accessExpiry: string;
+    refreshExpiry: string;
+    issuer: string;
+  };
+  security: {
+    rateLimitStorageUrl?: string;
+    rateLimitStrategy: 'memory' | 'redis';
+    maxFailedLoginAttempts: number;
+    lockoutDurationMinutes: number;
+    cspEnabled: boolean;
+    cspReportUri?: string;
+    hstsEnabled: boolean;
+    hstsMaxAge: number;
+  };
+  logging: {
+    level: 'trace' | 'debug' | 'info' | 'warn' | 'error';
+    redactPaths: string[];
+  };
   retry: {
     maxRetries: number;
     baseDelayMs: number;
@@ -77,10 +123,33 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const easypaisaBaseUrl =
     parsed.EASYPAISA_BASE_URL ?? parsed.EASYPaisa_BASE_URL ?? 'https://easypaisa.com.pk/redirect';
 
+  const redactPaths = parsed.LOG_REDACT_PATHS.split(',').map(path => path.trim());
+
   return {
     port: parsed.PORT,
+    nodeEnv: parsed.NODE_ENV,
     databaseUrl: parsed.DATABASE_URL,
     corsOrigin: parsed.CORS_ORIGIN,
+    jwt: {
+      secret: parsed.JWT_SECRET,
+      accessExpiry: parsed.JWT_ACCESS_EXPIRY,
+      refreshExpiry: parsed.JWT_REFRESH_EXPIRY,
+      issuer: parsed.JWT_ISSUER
+    },
+    security: {
+      rateLimitStorageUrl: parsed.RATE_LIMIT_STORAGE_URL,
+      rateLimitStrategy: parsed.RATE_LIMIT_STRATEGY,
+      maxFailedLoginAttempts: parsed.MAX_FAILED_LOGIN_ATTEMPTS,
+      lockoutDurationMinutes: parsed.LOCKOUT_DURATION_MINUTES,
+      cspEnabled: parsed.CSP_ENABLED,
+      cspReportUri: parsed.CSP_REPORT_URI,
+      hstsEnabled: parsed.HSTS_ENABLED,
+      hstsMaxAge: parsed.HSTS_MAX_AGE
+    },
+    logging: {
+      level: parsed.LOG_LEVEL,
+      redactPaths
+    },
     retry: {
       maxRetries: parsed.PAYMENTS_MAX_RETRIES,
       baseDelayMs: parsed.PAYMENTS_RETRY_BASE_DELAY_MS,

@@ -1,0 +1,41 @@
+#!/bin/sh
+# Pre-commit hook for security validation
+
+echo "🔒 Running security pre-commit checks..."
+
+# Check for environment file leakage
+echo "🔍 Checking for environment file leakage..."
+if git diff --cached --name-only | grep -E '\.env(\.local|\.development|\.test)?$' | grep -v '\.env\.example$'; then
+    echo "❌ Error: Environment files should not be committed to git!"
+    echo "   Please remove .env files from git tracking:"
+    echo "   git rm --cached .env .env.local .env.development .env.test"
+    exit 1
+fi
+
+# Run security linting
+echo "🛡️  Running security linting..."
+npm run lint:security
+if [ $? -ne 0 ]; then
+    echo "❌ Security linting failed!"
+    exit 1
+fi
+
+# Run type checking
+echo "📝 Running type checking..."
+npm run typecheck
+if [ $? -ne 0 ]; then
+    echo "❌ Type checking failed!"
+    exit 1
+fi
+
+# Security dependency audit
+echo "🔍 Running security dependency audit..."
+npm run security:audit
+if [ $? -ne 0 ]; then
+    echo "❌ Security dependency audit failed!"
+    echo "   Please fix security vulnerabilities before committing."
+    exit 1
+fi
+
+echo "✅ All security pre-commit checks passed!"
+exit 0

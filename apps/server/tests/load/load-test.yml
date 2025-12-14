@@ -1,0 +1,156 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 50
+      name: "Ramp up load"
+    - duration: 300
+      arrivalRate: 100
+      name: "Sustained load"
+    - duration: 60
+      arrivalRate: 150
+      name: "Peak load"
+  plugins:
+    expect: {}
+    metrics-by-endpoint: {}
+    publish-metrics:
+      - type: statsd
+        host: localhost
+        port: 8125
+        prefix: 'payments-platform'
+  defaults:
+    headers:
+      Content-Type: "application/json"
+      User-Agent: "load-test-automation"
+  processor: "./load-test-functions.js"
+
+scenarios:
+  - name: "User Journey - Login and Payments"
+    weight: 60
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "testuser@example.com"
+            password: "password123"
+          capture:
+            - json: "$.accessToken"
+              as: "accessToken"
+          expect:
+            - statusCode: [200, 201]
+            - hasProperty: "accessToken"
+
+      - post:
+          url: "/api/payment/deposit"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            provider: "JAZZCASH"
+            amount: 1000
+            currency: "PKR"
+            returnUrl: "https://example.com/return"
+          expect:
+            - statusCode: 201
+            - hasProperty: "paymentUrl"
+
+      - get:
+          url: "/api/user/deposits"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+            - contentType: "json"
+
+  - name: "Payment Status Checks"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "testuser2@example.com"
+            password: "password123"
+          capture:
+            - json: "$.accessToken"
+              as: "accessToken"
+
+      - post:
+          url: "/api/payment/deposit"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            provider: "EASYPAISA"
+            amount: 500
+            currency: "PKR"
+          capture:
+            - json: "$.id"
+              as: "transactionId"
+
+      - get:
+          url: "/api/payment/status/{{ transactionId }}"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Admin Operations"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "admin@example.com"
+            password: "admin123"
+          capture:
+            - json: "$.accessToken"
+              as: "accessToken"
+
+      - post:
+          url: "/api/payment/deposit"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            provider: "SADAPAY"
+            amount: 2000
+            currency: "PKR"
+          capture:
+            - json: "$.id"
+              as: "transactionId"
+
+      - post:
+          url: "/api/payment/reconcile/{{ transactionId }}"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "changed"
+
+  - name: "Webhook Simulation"
+    weight: 5
+    flow:
+      - post:
+          url: "/api/payment/webhook"
+          json:
+            provider: "JAZZCASH"
+            transactionId: "webhook-test-{{ $randomString() }}"
+            providerTransactionId: "provider-{{ $randomString() }}"
+            status: "CONFIRMED"
+            amount: "100.00"
+            currency: "PKR"
+            signature: "{{ $randomString() }}"
+          expect:
+            - statusCode: [200, 400]
+
+# Performance thresholds
+ensure:
+  p99: 2000  # 99th percentile response time < 2 seconds
+  p95: 1000  # 95th percentile response time < 1 second
+  p90: 500   # 90th percentile response time < 500ms
+  p75: 300   # 75th percentile response time < 300ms
+  p50: 200   # 50th percentile response time < 200ms
+  # Error rate < 0.1%
+  maxErrorRate: 0.1
+  # Success rate > 99.9%
+  minSuccessRate: 99.9
