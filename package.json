@@ -46,6 +46,27 @@
     "ci:security": "npm run security:audit && npm run test:security",
     "ci:load": "npm run test:load",
     "ci:full": "npm run lint && npm run typecheck && npm run test:coverage && npm run ci:security && npm run ci:load"
+    "dev": "npm run dev:client",
+    "dev:client": "npm -w apps/client run dev",
+    "dev:admin": "npm -w apps/admin run dev",
+    "dev:server": "npm -w apps/server run dev",
+    "build": "npm -w apps/client run build",
+    "build:admin": "npm -w apps/admin run build",
+    "build:all": "npm run build && npm run build:admin",
+    "test": "npm -w apps/client run test",
+    "test:admin": "npm -w apps/admin run test",
+    "test:all": "npm run test && npm run test:admin",
+    "typecheck": "npm -w apps/client run typecheck",
+    "typecheck:admin": "npm -w apps/admin run typecheck",
+    "typecheck:all": "npm run typecheck && npm run typecheck:admin",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings=0",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -63,9 +84,6 @@
   },
   "engines": {
     "node": ">=18.0.0",
-    "yarn": ">=1.22.0"
-  },
-  "packageManager": "yarn@1.22.0"
     "npm": ">=9.0.0"
   },
   "lint-staged": {

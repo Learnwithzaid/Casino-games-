@@ -29,6 +29,11 @@
     "lint": "eslint src --ext .ts",
     "lint:security": "eslint --ext .ts --no-eslintrc --config .eslintrc.security.js src",
     "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "prisma:dbpush": "prisma db push",
+    "prisma:seed": "tsx scripts/seed.ts",
+    "postinstall": "prisma generate"
   },
   "keywords": ["fastify", "prisma", "wallet", "payments"],
   "author": "",

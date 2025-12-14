@@ -1207,3 +1207,86 @@ npm run prisma:generate
 ---
 
 **Note**: This schema is designed for production use with proper indexes, constraints, and data types. Always test migrations in a development environment first, and maintain database backups for production deployments.
+
+## Admin Panel
+
+The admin dashboard provides comprehensive platform management capabilities.
+
+### Quick Start
+
+```bash
+# Run admin panel
+npm run dev:admin
+
+# Build for production
+npm run build:admin
+
+# Run tests
+npm run test:admin
+
+# Run tests in watch mode
+npm run test:admin -- --watch
+
+# Type check
+npm run typecheck:admin
+```
+
+The admin panel will be available at `http://localhost:5174`
+
+### Features
+
+- **Secure Authentication**: Email/password login with 2FA (TOTP) support
+- **Role-Based Access Control**: Admin and SuperAdmin roles with granular permissions
+- **Game Management**: Create, update, and manage games with configurable parameters
+- **User Management**: View user profiles, balances, and transaction history
+- **Transaction Monitoring**: Real-time transaction tracking with export to CSV
+- **Audit Logs**: Complete audit trail of all platform changes
+- **Settings Management**: Platform configuration and maintenance mode toggle
+- **Responsive Design**: Mobile-friendly interface with Material-UI
+
+### Admin Login Credentials
+
+For development/testing:
+- Email: Use an admin account from the database
+- Password: As configured in your database
+- 2FA: Optional TOTP verification
+
+### Environment Variables
+
+Create `.env.local` in `apps/admin/`:
+
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+### Key Routes
+
+- `/login` - Admin login page
+- `/dashboard` - Overview and statistics
+- `/games` - Game management
+- `/users` - User management and details
+- `/transactions` - Transaction monitoring
+- `/audit-logs` - Platform audit trail
+- `/settings` - Platform settings and configuration
+
+### RBAC Permissions
+
+**Admin Role:**
+- View games, users, transactions, and audit logs
+- Create and edit games
+- No access to settings or admin management
+
+**SuperAdmin Role:**
+- Full access to all features
+- Manage settings and platform configuration
+- Admin user management
+- Maintenance mode control
+
+### Documentation
+
+See [apps/admin/README.md](./apps/admin/README.md) for detailed admin panel documentation including:
+- Authentication flow
+- Component architecture
+- API integration
+- Testing guide
+- Contributing guidelines
