@@ -103,3 +103,120 @@ model AuditLog {
 
   @@index([entityType, entityId, createdAt])
 }
+
+model Game {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  slug            String   @unique
+  provider        String
+  type            String   // SLOT, TABLE, LIVE, etc.
+  rtp             Float    @default(95.0) // Return to Player percentage
+  isActive        Boolean  @default(true)
+  minBet          Float    @default(0.01)
+  maxBet          Float    @default(1000.00)
+  maxWin          Float    @default(50000.00)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  symbols         GameSymbol[]
+  paylines        Payline[]
+  gameRounds      GameRound[]
+  
+  @@index([name])
+  @@index([slug])
+  @@index([provider])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model GameSymbol {
+  id              String   @id @default(cuid())
+  gameId          String
+  symbol          String
+  multiplier      Float    @default(1.00)
+  isScatter       Boolean  @default(false)
+  isWild          Boolean  @default(false)
+  isBonus         Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  weight          Int      @default(1) // For RNG weighted selection
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  game            Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId])
+  @@index([symbol])
+  @@index([isScatter])
+  @@index([isWild])
+  @@index([sortOrder])
+}
+
+model Payline {
+  id              String   @id @default(cuid())
+  gameId          String
+  name            String
+  pattern         String   // JSON array of positions representing the payline
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  game            Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId])
+  @@index([name])
+  @@index([isActive])
+}
+
+model GameRound {
+  id              String   @id @default(cuid())
+  gameId          String
+  userId          String
+  betAmount       Decimal
+  winAmount       Decimal  @default(0)
+  status          String   @default("PENDING") // PENDING, COMPLETED, FAILED
+  grid            String   // JSON representation of 3x3 grid
+  winningLines    String   // JSON array of winning paylines
+  rtpSnapshot     Float    // RTP at time of spin
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  game            Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id])
+  result          GameResult?
+
+  @@index([gameId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model GameResult {
+  id              String   @id @default(cuid())
+  gameRoundId     String   @unique
+  outcome         String   // WIN, LOSS, BONUS
+  payout          Decimal
+  multiplier      Float    @default(1.0)
+  bonusTriggered  Boolean  @default(false)
+  freeSpins       Int      @default(0)
+  rngSeed         String   // For audit and replay
+  createdAt       DateTime @default(now())
+
+  gameRound       GameRound @relation(fields: [gameRoundId], references: [id], onDelete: Cascade)
+
+  @@index([outcome])
+  @@index([createdAt])
+}
+
+model RTPSnapshot {
+  id              String   @id @default(cuid())
+  gameId          String
+  userId          String?
+  betAmount       Decimal
+  winAmount       Decimal
+  rtp             Float    // Calculated RTP for this round
+  createdAt       DateTime @default(now())
+
+  @@index([gameId])
+  @@index([userId])
+  @@index([createdAt])
+}

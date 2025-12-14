@@ -20,6 +20,15 @@
     "test:client": "yarn workspace @monorepo/client test",
     "test:server": "yarn workspace @monorepo/server test",
     "typecheck": "yarn workspaces run typecheck",
+    "dev": "npm run dev:client",
+    "dev:client": "npm -w apps/client run dev",
+    "build": "npm -w apps/client run build",
+    "test": "npm -w apps/client run test",
+    "typecheck": "npm -w apps/client run typecheck",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings=0",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
@@ -45,4 +54,15 @@
     "yarn": ">=1.22.0"
   },
   "packageManager": "yarn@1.22.0"
+    "npm": ">=9.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  }
 }

@@ -16,6 +16,10 @@
     "prisma:studio": "prisma studio",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts"
+    "prisma:dbpush": "prisma db push",
+    "prisma:seed": "tsx scripts/seed.ts",
+    "postinstall": "prisma generate",
+    "test": "node scripts/test-run.mjs"
   },
   "keywords": ["fastify", "prisma", "wallet", "payments"],
   "author": "",
