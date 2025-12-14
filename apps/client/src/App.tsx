@@ -1,55 +1,80 @@
-import { useState, useEffect } from 'react';
-import type { HealthCheckResponse } from '@monorepo/shared';
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { useAuthStore } from '@/store/authStore';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import Layout from '@/components/Layout';
+
+// Lazy load pages for better performance
+const Login = React.lazy(() => import('@/pages/Login'));
+const Game = React.lazy(() => import('@/pages/Game'));
+const Profile = React.lazy(() => import('@/pages/Profile'));
+const History = React.lazy(() => import('@/pages/History'));
+const Deposit = React.lazy(() => import('@/pages/Deposit'));
+
+// Loading component
+const PageLoader: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="loading-spinner w-8 h-8"></div>
+  </div>
+);
 
 function App() {
-  const [health, setHealth] = useState<HealthCheckResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('http://localhost:3000/health')
-      .then((res) => res.json())
-      .then((data) => {
-        setHealth(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch health:', err);
-        setLoading(false);
-      });
-  }, []);
+  // Initialize auth store to check for existing tokens
+  useAuthStore();
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      <h1>Client App</h1>
-      <p>This is a placeholder for the client application.</p>
+    <Router>
+      <div className="App">
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            
+            {/* Protected routes */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="/game" replace />} />
+              <Route path="game" element={<Game />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="history" element={<History />} />
+              <Route path="deposit" element={<Deposit />} />
+            </Route>
 
-      <div
-        style={{
-          marginTop: '2rem',
-          padding: '1rem',
-          background: '#f5f5f5',
-          borderRadius: '8px',
-        }}
-      >
-        <h2>API Health Status</h2>
-        {loading ? (
-          <p>Loading...</p>
-        ) : health ? (
-          <pre
-            style={{
-              background: '#fff',
-              padding: '1rem',
-              borderRadius: '4px',
-              overflow: 'auto',
-            }}
-          >
-            {JSON.stringify(health, null, 2)}
-          </pre>
-        ) : (
-          <p style={{ color: 'red' }}>Failed to connect to API</p>
-        )}
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/game" replace />} />
+          </Routes>
+        </Suspense>
+
+        {/* Global toast notifications */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            success: {
+              style: {
+                background: '#059669',
+              },
+            },
+            error: {
+              style: {
+                background: '#dc2626',
+              },
+            },
+          }}
+        />
       </div>
-    </div>
+    </Router>
   );
 }
 
