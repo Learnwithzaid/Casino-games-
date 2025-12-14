@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentProvider {
+  JAZZCASH
+  EASYPaisa
+  SADAPAY
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  EXPIRED
+}
+
+enum WalletEntryType {
+  CREDIT
+  DEBIT
+}
+
+model User {
+  id        String   @id
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallet      WalletAccount?
+  payments    PaymentTransaction[]
+  auditEvents AuditLog[] @relation("AuditActor")
+}
+
+model WalletAccount {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  currency  String   @default("PKR")
+  balance   Decimal  @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User               @relation(fields: [userId], references: [id])
+  entries WalletLedgerEntry[]
+}
+
+model WalletLedgerEntry {
+  id            String          @id @default(cuid())
+  walletId      String
+  type          WalletEntryType
+  amount        Decimal
+  referenceType String
+  referenceId   String
+  createdAt     DateTime        @default(now())
+
+  wallet WalletAccount @relation(fields: [walletId], references: [id])
+
+  @@index([referenceType, referenceId])
+  @@unique([referenceType, referenceId, type])
+}
+
+model PaymentTransaction {
+  id                    String          @id @default(cuid())
+  provider              PaymentProvider
+  status                PaymentStatus   @default(PENDING)
+  userId                String
+  amount                Decimal
+  currency              String          @default("PKR")
+
+  providerTransactionId  String?
+  signature             String?
+  retries               Int             @default(0)
+  redirectUrl           String?
+  metadata              Json?
+
+  lastWebhookAt          DateTime?
+  confirmedAt            DateTime?
+  creditedAt             DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@unique([provider, providerTransactionId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String
+  meta        Json?
+  createdAt   DateTime @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id])
+
+  @@index([entityType, entityId, createdAt])
+}

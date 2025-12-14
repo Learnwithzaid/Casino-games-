@@ -1,0 +1,12 @@
+{
+  "name": "payments-platform",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "npm -w apps/server test",
+    "typecheck": "npm -w apps/server typecheck",
+    "lint": "npm -w apps/server lint"
+  }
+}
