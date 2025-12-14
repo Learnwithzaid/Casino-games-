@@ -1,5 +1,14 @@
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 
+declare module 'fastify' {
+  interface FastifyRequest {
+    user?: {
+      userId: string;
+      role: 'user' | 'admin';
+    };
+  }
+}
+
 export const authPlugin: FastifyPluginAsync = async (app) => {
   app.addHook('preHandler', async (request) => {
     const userIdHeader = request.headers['x-user-id'];
@@ -9,7 +18,7 @@ export const authPlugin: FastifyPluginAsync = async (app) => {
 
     const role = roleHeader === 'admin' ? 'admin' : 'user';
 
-    request.user = { id: userIdHeader, role };
+    request.user = { userId: userIdHeader, role };
 
     await app.prisma.user.upsert({
       where: { id: userIdHeader },

@@ -10,6 +10,9 @@ import { PaymentsService } from './modules/payments/payments.service.js';
 import { buildProviderRegistry } from './modules/payments/providers/index.js';
 import { PaymentRetryQueue } from './modules/payments/retry-queue.js';
 import { paymentsRoutes } from './modules/payments/payments.routes.js';
+import { SlotEngineService } from './modules/slot-engine/slot-engine.service.js';
+import { BettingService } from './modules/slot-engine/betting.service.js';
+import { slotEngineRoutes } from './modules/slot-engine/routes.js';
 
 export type BuildAppDeps = {
   prisma: PrismaClient;
@@ -47,15 +50,22 @@ export async function buildApp({ prisma, config, logger }: BuildAppDeps) {
 
   const payments = new PaymentsService(prisma, logger, wallet, retryQueue, buildProviderRegistry(config));
 
+  // Initialize slot engine services
+  const slotEngineService = new SlotEngineService(prisma);
+  const bettingService = new BettingService(prisma, slotEngineService, wallet);
+
   app.decorate('services', {
     payments,
     wallet,
-    retryQueue
+    retryQueue,
+    slotEngineService,
+    bettingService
   });
 
   app.get('/health', async () => ({ ok: true }));
 
   await app.register(paymentsRoutes);
+  await app.register(slotEngineRoutes);
 
   app.addHook('onClose', async () => {
     retryQueue.clearAll();
