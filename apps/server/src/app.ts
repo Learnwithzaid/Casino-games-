@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
+import { Prisma } from '@prisma/client';
 import type { PrismaClient } from '@prisma/client';
 import type { Logger } from 'pino';
 import type { AppConfig } from './config.js';
@@ -10,6 +11,7 @@ import { PaymentsService } from './modules/payments/payments.service.js';
 import { buildProviderRegistry } from './modules/payments/providers/index.js';
 import { PaymentRetryQueue } from './modules/payments/retry-queue.js';
 import { paymentsRoutes } from './modules/payments/payments.routes.js';
+import { slotGameRoutes } from './modules/slot-game/slot-game.routes.js';
 
 export type BuildAppDeps = {
   prisma: PrismaClient;
@@ -56,6 +58,7 @@ export async function buildApp({ prisma, config, logger }: BuildAppDeps) {
   app.get('/health', async () => ({ ok: true }));
 
   await app.register(paymentsRoutes);
+  await app.register(slotGameRoutes);
 
   app.addHook('onClose', async () => {
     retryQueue.clearAll();

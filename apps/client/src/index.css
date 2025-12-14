@@ -1,0 +1,82 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+@layer base {
+  body {
+    @apply bg-slot-primary text-white font-slot;
+  }
+  
+  .slot-symbol {
+    @apply w-16 h-16 md:w-20 md:h-20 flex items-center justify-center text-2xl md:text-3xl font-bold rounded-lg border-2 border-slot-accent bg-gradient-to-br from-slot-secondary to-slot-primary shadow-lg;
+    transition: all 0.3s ease;
+  }
+  
+  .slot-symbol:hover {
+    @apply scale-105 shadow-xl border-slot-gold;
+  }
+  
+  .reel-container {
+    @apply relative overflow-hidden rounded-lg border-4 border-slot-gold bg-gradient-to-b from-slot-primary to-slot-secondary shadow-2xl;
+  }
+  
+  .payline-overlay {
+    @apply absolute inset-0 pointer-events-none;
+  }
+  
+  .win-highlight {
+    @apply animate-pulse-glow bg-slot-gold/30 border-slot-gold;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+  }
+  
+  .game-button {
+    @apply px-6 py-3 bg-slot-accent hover:bg-red-600 text-white font-bold rounded-lg shadow-lg transform transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .game-button:disabled {
+    @apply bg-gray-500 hover:bg-gray-500 transform-none;
+  }
+  
+  .balance-display {
+    @apply bg-gradient-to-r from-slot-gold to-yellow-400 text-slot-primary px-4 py-2 rounded-lg font-bold text-lg shadow-lg;
+  }
+  
+  .bet-selector {
+    @apply bg-slot-secondary border-2 border-slot-accent rounded-lg p-3 text-white;
+  }
+}
+
+@layer components {
+  .reel-spin-animation {
+    animation: reel-spin 2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+  
+  .celebration-animation {
+    animation: celebration 0.6s ease-in-out;
+  }
+}
+
+@keyframes reel-spin {
+  0% { transform: translateY(0); }
+  80% { transform: translateY(-200%); }
+  90% { transform: translateY(-190%); }
+  95% { transform: translateY(-195%); }
+  100% { transform: translateY(-192%); }
+}
+
+@keyframes celebration {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.loading-skeleton {
+  @apply animate-pulse bg-gradient-to-r from-slot-secondary via-slot-primary to-slot-secondary bg-[length:200%_100%];
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}

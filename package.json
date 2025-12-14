@@ -2,75 +2,29 @@
   "name": "payments-platform",
   "private": true,
   "workspaces": [
-    "apps/*"
-  ],
-  "scripts": {
-    "test": "npm -w apps/server test",
-    "typecheck": "npm -w apps/server typecheck",
-    "lint": "npm -w apps/server lint"
-  "name": "wallet-ledger-service",
-  "version": "1.0.0",
-  "description": "Wallet ledger service with atomic transactions",
-  "main": "dist/server.js",
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts",
-    "test": "jest --runInBand",
-    "test:watch": "jest --watch",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\""
-  },
-  "keywords": ["wallet", "ledger", "transactions"],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "express": "^4.18.2",
-    "typeorm": "^0.3.17",
-    "pg": "^8.11.3",
-    "reflect-metadata": "^0.1.13",
-    "express-validator": "^7.0.1",
-    "dotenv": "^16.3.1",
-    "uuid": "^9.0.1"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.10.0",
-    "@types/jest": "^29.5.8",
-    "@types/supertest": "^2.0.16",
-    "@types/uuid": "^9.0.7",
-    "typescript": "^5.3.2",
-    "ts-node": "^10.9.1",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.1",
-    "supertest": "^6.3.3",
-    "@typescript-eslint/eslint-plugin": "^6.13.0",
-    "@typescript-eslint/parser": "^6.13.0",
-    "eslint": "^8.54.0",
-    "prettier": "^3.1.0"
-  "name": "monorepo-stack",
-  "version": "1.0.0",
-  "private": true,
-  "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
     "dev": "yarn workspace @monorepo/api dev",
-    "dev:admin": "yarn workspace @monorepo/admin dev",
     "dev:client": "yarn workspace @monorepo/client dev",
+    "dev:server": "yarn workspace @monorepo/server dev",
     "build": "yarn workspaces run build",
+    "build:client": "yarn workspace @monorepo/client build",
+    "build:server": "yarn workspace @monorepo/server build",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "test": "yarn workspaces run test",
+    "test:client": "yarn workspace @monorepo/client test",
+    "test:server": "yarn workspace @monorepo/server test",
     "typecheck": "yarn workspaces run typecheck",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "lighthouse": "yarn workspace @monorepo/client lighthouse"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -89,43 +43,6 @@
   "engines": {
     "node": ">=18.0.0",
     "yarn": ">=1.22.0"
-  "name": "gaming-api",
-  "version": "1.0.0",
-  "description": "Gaming API with database schema",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "tsc",
-    "dev": "ts-node-dev --respawn src/index.ts",
-    "start": "node dist/index.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
-    "prisma:seed": "ts-node prisma/seed.ts",
-    "prisma:studio": "prisma studio",
-    "db:reset": "prisma migrate reset",
-    "db:setup": "npm run prisma:generate && npm run prisma:migrate && npm run prisma:seed"
   },
-  "keywords": ["gaming", "api", "prisma", "database"],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "@prisma/client": "^5.7.1",
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "helmet": "^7.1.0",
-    "dotenv": "^16.3.1",
-    "bcrypt": "^5.1.1",
-    "jsonwebtoken": "^9.0.2"
-  },
-  "devDependencies": {
-    "@types/node": "^20.10.5",
-    "@types/express": "^4.17.21",
-    "@types/cors": "^2.8.17",
-    "@types/bcrypt": "^5.0.2",
-    "@types/jsonwebtoken": "^9.0.5",
-    "prisma": "^5.7.1",
-    "typescript": "^5.3.3",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0"
-  }
+  "packageManager": "yarn@1.22.0"
 }
